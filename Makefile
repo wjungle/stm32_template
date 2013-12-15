@@ -11,10 +11,10 @@ LIB_STM = ./libstm
 TOOLCHAIN_PATH ?= /usr/local/csl/arm-2012.03/arm-none-eabi
 C_LIB= $(TOOLCHAIN_PATH)/lib/thumb2
 
-CFLAGS=-g -O2 -mlittle-endian -mthumb
+CFLAGS=-g -O2 -mlittle-endian -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=softfp
 CFLAGS+=-mcpu=cortex-m4
 CFLAGS+=-ffreestanding -nostdlib
-
+#CFLAGS+=-D __FPU_PRESENT=1 -D ARM_MATH_CM4
 
 # to run from FLASH
 CFLAGS+=-Wl,-T,$(LIB_STM)/stm32_flash.ld
@@ -54,7 +54,7 @@ $(BIN_IMAGE): $(EXECUTABLE)
 
 $(EXECUTABLE): main.c $(SRC)
 	$(CC) $(CFLAGS) $^ -o $@  -L./libstm/STM32F4xx_StdPeriph_Driver/build \
-		-lSTM32F4xx_StdPeriph_Driver -L$(C_LIB)
+		-lSTM32F4xx_StdPeriph_Driver -L$(C_LIB) -lc -lm -lg -lgcc
 
 clean:
 	rm -rf $(EXECUTABLE)

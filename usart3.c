@@ -1,5 +1,6 @@
 #include "stm32f4xx_conf.h"
 #include <stdarg.h>
+#include <string.h>
 
 /*
  * function name: 	itoa
@@ -57,6 +58,125 @@ static char *itoa(int value, char *string, int radix)
 	return string;
 
 } /* NCL_Itoa */
+
+
+void ltoa(char *buf, unsigned long i, int base)
+{
+        char *s;
+        #define LEN 25
+        int rem;
+        char rev[LEN+1];
+
+        if (i == 0)
+                s = "0";
+        else
+                {
+                rev[LEN] = 0;
+                s = &rev[LEN];
+                while (i)
+                        {
+                        rem = i % base;
+                        if (rem < 10)
+                                *--s = rem + '0';
+                        else if (base == 16)
+                                *--s = "abcdef"[rem - 10];
+                        i /= base;
+                        }
+                }
+        strcpy(buf, s);
+}
+
+typedef union {
+long L;
+float F;
+} LF_t;
+
+char *ftoa(float f) //, int *status)
+{
+        long mantissa, int_part, frac_part;
+        short exp2;
+        LF_t x;
+        char *p;
+        static char outbuf[15];
+
+        //*status = 0;
+        if (f == 0.0)
+        {
+                outbuf[0] = '0';
+                outbuf[1] = '.';
+                outbuf[2] = '0';
+                outbuf[3] = 0;
+                return outbuf;
+        }
+        x.F = f;
+
+        exp2 = (unsigned char)(x.L >> 23) - 127;
+        mantissa = (x.L & 0xFFFFFF) | 0x800000;
+        frac_part = 0;
+        int_part = 0;
+
+        if (exp2 >= 31)
+        {
+                //*status = _FTOA_TOO_LARGE;
+                return 0;
+        }
+        else if (exp2 < -23)
+        {
+                //*status = _FTOA_TOO_SMALL;
+                return 0;
+        }
+        else if (exp2 >= 23)
+        int_part = mantissa << (exp2 - 23);
+        else if (exp2 >= 0)
+        {
+                int_part = mantissa >> (23 - exp2);
+                frac_part = (mantissa << (exp2 + 1)) & 0xFFFFFF;
+        }
+        else /* if (exp2 < 0) */
+        frac_part = (mantissa & 0xFFFFFF) >> -(exp2 + 1);
+
+        p = outbuf;
+
+        if (x.L < 0)
+                *p++ = '-';
+
+        if (int_part == 0)
+                *p++ = '0';
+        else
+        {
+                ltoa(p, int_part, 10);
+                while (*p)
+                p++;
+        }
+        *p++ = '.';
+
+        if (frac_part == 0)
+                *p++ = '0';
+        else
+        {
+                char m, max;
+
+                max = sizeof (outbuf) - (p - outbuf) - 1;
+                if (max > 7)
+                        max = 7;
+                /* print BCD */
+                for (m = 0; m < max; m++)
+                {
+                        /* frac_part *= 10; */
+                        frac_part = (frac_part << 3) + (frac_part << 1);
+
+                        *p++ = (frac_part >> 24) + '0';
+                        frac_part &= 0xFFFFFF;
+                }
+                /* delete ending zeroes */
+                for (--p; p[0] == '0' && p[-1] != '.'; --p)
+                        ;
+                        ++p;
+        }
+        *p = 0;
+
+        return outbuf;
+}
 
 
 /*
@@ -126,63 +246,74 @@ void printf(uint8_t *Data,...)
 {
 	const char *s;
 	int d;   
+	double f;
 	char buf[16];
 	
 	va_list ap;
 	va_start(ap, Data);
 	
-	while ( *Data != 0)     // 瓚剿岆瘁善湛趼睫揹賦旰睫
+	while ( *Data != 0)     //判斷是否到達string結束位元
 	{				                          
 		if ( *Data == 0x5c )  //'\'
-	{									  
-	switch ( *++Data )
-	{
-		case 'r':							          //隙陬睫
-			USART_SendData(USART3, 0x0d);
-			Data ++;
-		break;
+		{									  
+			switch ( *++Data )
+			{
+				case 'r':
+					USART_SendData(USART3, 0x0d);
+					Data ++;
+					break;
 		
-		case 'n':							          //遙俴睫
-			USART_SendData(USART3, 0x0a);	
-			Data ++;
-		break;
+				case 'n':
+					USART_SendData(USART3, 0x0a);	
+					Data ++;
+					break;
 		
-		default:
-			Data ++;
-		break;
-	}			 
-	}
-	else if ( *Data == '%')
-	{									  //
-	switch ( *++Data )
-	{				
-		case 's':										  //趼睫揹
-			s = va_arg(ap, const char *);
-	for ( ; *s; s++) 
-	{
-		USART_SendData(USART3,*s);
-		while( USART_GetFlagStatus(USART3, USART_FLAG_TC) == RESET );
-	}
-		Data++;
-		break;
+				default:
+					Data ++;
+					break;
+			}			 
+		}
+		else if ( *Data == '%')
+		{									 
+			switch ( *++Data )
+			{				
+				case 's':	
+					s = va_arg(ap, const char *);
+					for ( ; *s; s++) 
+					{
+						USART_SendData(USART3,*s);
+						while( USART_GetFlagStatus(USART3, USART_FLAG_TC) == RESET );
+					}
+					Data++;
+					break;
 	
-	case 'd':										//坋輛秶
-	d = va_arg(ap, int);
-	itoa(d, buf, 10);
-	for (s = buf; *s; s++) 
-	{
-		USART_SendData(USART3,*s);
-		while( USART_GetFlagStatus(USART3, USART_FLAG_TC) == RESET );
-	}
-	Data++;
-	break;
-		 default:
-				Data++;
-		    break;
-	}		 
-	} /* end of else if */
-	else USART_SendData(USART3, *Data++);
-	while( USART_GetFlagStatus(USART3, USART_FLAG_TC) == RESET );
+					case 'd':										//十進制
+						d = va_arg(ap, int);
+						itoa(d, buf, 10);
+						for (s = buf; *s; s++) 
+						{
+							USART_SendData(USART3,*s);
+							while( USART_GetFlagStatus(USART3, USART_FLAG_TC) == RESET );
+						}
+						Data++;
+						break;
+					case 'f':
+						f = va_arg(ap, double);
+						ftoa(f);
+						for(; *s; s++)
+						{
+							USART_SendData(USART3, *s);
+							while( USART_GetFlagStatus(USART3, USART_FLAG_TC == RESET));
+						}
+						Data++;
+						break;
+					default:
+						Data++;
+						break;
+			}		 
+		} /* end of else if */
+		else USART_SendData(USART3, *Data++);
+			while( USART_GetFlagStatus(USART3, USART_FLAG_TC) == RESET );
 	}
 }
 
