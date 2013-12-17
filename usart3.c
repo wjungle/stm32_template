@@ -2,62 +2,52 @@
 #include <stdarg.h>
 #include <string.h>
 
+/* function name: str_reverse()
+ * description: reverse string
+ *
+ * @args: a null-terminated string
+ * @return: nothing
+ * @result: the characters in str are str_reverse
+ * @refrence: https://wirejungle.wordpress.com/2011/08/06/displaying-floating-point-numbers/
+ */
+void str_reverse(char* begin, char* end)
+{
+	char tmp;
+	while(end > begin)
+		tmp=*end, *end--=*begin, *begin++=tmp;
+}
+
+
 /*
  * function name: 	itoa
  * description:		integer to ascii
- * input:			-radix = 10
-					-value
-					-buf
- * output:			none
- * refrence from:	stm32庫開發實踐指南
+ * 
+ * @args:			value, str
+ * @return:			the last position of string
+ * @result:			convert integer to ascii store in str
 */
-static char *itoa(int value, char *string, int radix)
+char *itoa(long value, char *str)
 {
-	int     i, d;
-	int     flag = 0;
-	char    *ptr = string;
-	
-	/* This implementation only works for decimal numbers. */
-	if (radix != 10)
-	{
-	    *ptr = 0;
-	    return string;
-	}
-	
-	if (!value)
-	{
-	    *ptr++ = 0x30;
-	    *ptr = 0;
-	    return string;
-	}
-	
-	/* if this is a negative value insert the minus sign. */
-	if (value < 0)
-	{
-	    *ptr++ = '-';
-	
-	    /* Make the value positive. */
-	    value *= -1;
-	}
-	
-	for (i = 10000; i > 0; i /= 10)
-	{
-	    d = value / i;
-	
-	    if (d || flag)
-	    {
-	        *ptr++ = (char)(d + 0x30);
-			value -= (d * i);
-			flag = 1;
-		}
-	}
+	char *p = str;
+	static char digit[] = "0123456789";
 
-	/* Null terminate the string. */
-	*ptr = 0;
-	
-	return string;
+	//Add sign if needed
+	if(value < 0) *(p++)='-';
 
-} /* NCL_Itoa */
+	//Work on unsigned
+	//value = ABS(value);
+
+	//Conversion. Number is reversed.
+	do{
+		const int tmp = value/10;
+		*(p++) = digit[value - (tmp * 10)];
+		value = tmp;
+	}while(value);
+
+	*p=' ';
+	str_reverse(str, p - 1);
+	return p;
+}
 
 
 void ltoa(char *buf, unsigned long i, int base)
@@ -117,12 +107,14 @@ char *ftoa(float f) //, int *status)
 
         if (exp2 >= 31)
         {
-                //*status = _FTOA_TOO_LARGE;
+                //*status = _FTOA_TOO_LARGE
+				//outbuf = 0;return;
                 return 0;
         }
         else if (exp2 < -23)
         {
                 //*status = _FTOA_TOO_SMALL;
+				//outbuf = 0;return;
                 return 0;
         }
         else if (exp2 >= 23)
@@ -247,7 +239,7 @@ void printf(uint8_t *Data,...)
 	const char *s;
 	int d;   
 	double f;
-	char buf[16];
+	char buf[16]={0};
 	
 	va_list ap;
 	va_start(ap, Data);
@@ -289,7 +281,7 @@ void printf(uint8_t *Data,...)
 	
 					case 'd':										//十進制
 						d = va_arg(ap, int);
-						itoa(d, buf, 10);
+						itoa(d, buf);
 						for (s = buf; *s; s++) 
 						{
 							USART_SendData(USART3,*s);
@@ -299,8 +291,8 @@ void printf(uint8_t *Data,...)
 						break;
 					case 'f':
 						f = va_arg(ap, double);
-						ftoa(f);
-						for(; *s; s++)
+						strcat(buf, ftoa(f));
+						for(s = buf; *s; s++)
 						{
 							USART_SendData(USART3, *s);
 							while( USART_GetFlagStatus(USART3, USART_FLAG_TC == RESET));
