@@ -14,6 +14,7 @@ C_LIB= $(TOOLCHAIN_PATH)/lib/thumb2
 CFLAGS=-g -O2 -mlittle-endian -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=softfp
 CFLAGS+=-mcpu=cortex-m4
 CFLAGS+=-ffreestanding -nostdlib
+CFLAGS+=-DUSE_STDPERIPH_DRIVER
 #CFLAGS+=-D __FPU_PRESENT=1 -D ARM_MATH_CM4
 
 # to run from FLASH
