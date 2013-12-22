@@ -2,6 +2,8 @@
 #include <stdarg.h>
 #include <string.h>
 
+#define ABS(x) ((x) < 0 ? -x : x)
+
 /* function name: str_reverse()
  * description: reverse string
  *
@@ -29,13 +31,17 @@ void str_reverse(char* begin, char* end)
 char *itoa(long value, char *str)
 {
 	char *p = str;
+	char sign = 0;
 	static char digit[] = "0123456789";
 
 	//Add sign if needed
-	if(value < 0) *(p++)='-';
+	if(value < 0) {
+		*(p++)='-';
+		sign = 1;
+	}
 
 	//Work on unsigned
-	//value = ABS(value);
+	value = ABS(value);
 
 	//Conversion. Number is reversed.
 	do{
@@ -45,7 +51,10 @@ char *itoa(long value, char *str)
 	}while(value);
 
 	*p=' ';
-	str_reverse(str, p - 1);
+	if(sign == 0)
+		str_reverse(str, p - 1);
+	else
+		str_reverse(str + 1, p - 1);
 	return p;
 }
 
