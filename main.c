@@ -6,6 +6,7 @@ int main(void)
 	int i;
 	float a = 1.2;
 	float b = 1.8;
+	SysTick_Init();
 	USART3_Config();
 	//USART3_printf(USART3, "\r\n This is a USART3_printf demo \r\n");
 	//USART3_printf(USART3, "\r\n ("__DATE__" - "__TIME__") \r\n");
@@ -18,6 +19,7 @@ int main(void)
 		printf("\r\n ("__DATE__" - "__TIME__") \r\n");
 		printf("10 = %d\r\n", 10);
 		printf("10 = %d\r\n", -10);
+		Delay(1000);	//unit is ms
 		if(b > a) printf("b > a\n");
 		printf("c = %d\n", c);
 		printf("a = %d\n", (int)(a*10));

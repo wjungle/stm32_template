@@ -35,7 +35,7 @@ CFLAGS+=-I./libstm/STM32F4xx_StdPeriph_Driver/inc
 CFLAGS+=-I./libstm/Utilities/STM32F4-Discovery
 
 #Source Files
-SRC += main.c system_stm32f4xx.c stm32f4xx_it.c usart3.c
+SRC += main.c system_stm32f4xx.c stm32f4xx_it.c usart3.c delay.c
 
 #STARTUP
 SRC+=$(LIB_STM)/startup_stm32f4xx.s
