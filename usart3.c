@@ -243,6 +243,7 @@ char USART3_printf(char *string){
  * output:			none
  * refrence from:	http://lolikitty.pixnet.net/blog/post/143466068
 */
+#if 0
 void printf(uint8_t *Data,...)
 {
 	const char *s;
@@ -318,4 +319,5 @@ void printf(uint8_t *Data,...)
 	}
 }
 
+#endif
 
