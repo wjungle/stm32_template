@@ -1,7 +1,7 @@
 #include "delay.h" 
 
 /* Private variables */
-static __IO uint32_t TimingDelay;
+__IO uint32_t TimingDelay;
 
 /* Private function prototypes */
 void Delay(__IO uint32_t nTime);
